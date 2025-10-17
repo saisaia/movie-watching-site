@@ -12,15 +12,26 @@
     <script type="module">
         // --- Firebase SDK Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // --- GLOBAL INITIALIZATION AND DATA SETUP ---
-        // These variables are provided by the environment.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
+        // Find this in your Firebase project settings under "General" -> "Your apps" -> "SDK setup and configuration".
+        const firebaseConfig = {
+            apiKey: "AIzaSyARJ0uLQqyLxgM8RogMryvKdMpwPBimFjo", // <-- CORRECT API KEY PASTED HERE
+            authDomain: "my-portfolio-live-1fffd.firebaseapp.com",
+            databaseURL: "https://my-portfolio-live-1fffd-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "my-portfolio-live-1fffd",
+            storageBucket: "my-portfolio-live-1fffd.appspot.com",
+            messagingSenderId: "62e822084169",
+            appId: "1:62e822084169:web:c0b70ce9fee77e6ecc5af6",
+            measurementId: "G-82W4Y5V4A4"
+        };
+        // --- END OF FIREBASE CONFIGURATION ---
+
+
+        const appId = 'default-app-id'; // This should match the document ID you created in Firestore.
 
         // --- Global Firebase instances ---
         let app, db, rtdb, auth;
@@ -84,8 +95,8 @@
             // Render static contact details immediately for better perceived performance
             renderContactDetails(INITIAL_RESUME_DATA.contact);
 
-            if (!firebaseConfig || !firebaseConfig.apiKey) {
-                console.error("Firebase configuration not found. Running in Static Fallback Mode.");
+            if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("...")) {
+                console.error("Firebase configuration not found or is incomplete. Running in Static Fallback Mode.");
                 document.getElementById('system-status').textContent = 'STATIC FALLBACK';
                 renderStaticData();
                 return;
@@ -97,11 +108,7 @@
                 db = getFirestore(app);
                 rtdb = getDatabase(app);
 
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
 
                 userId = auth.currentUser?.uid || 'anonymous-' + crypto.randomUUID();
                 document.getElementById('user-id-display').textContent = `Session ID: ${userId.substring(0, 8)}...`;
@@ -117,6 +124,8 @@
             }
         }
 
+        // --- The rest of your JavaScript functions (renderStaticData, setupViewCounters, etc.) go here ---
+        // (Content redacted for brevity, it's the same as your original file)
         // --- Renders all sections using the fallback data ---
         function renderStaticData() {
             renderSummary(INITIAL_RESUME_DATA.summaryText);
@@ -220,7 +229,6 @@
 
             const viberLink = document.getElementById('viber-link');
             if (viberLink) {
-                viberLink.href = contactData.viber || '#';
                 viberLink.querySelector('.has-tooltip').textContent = contactData.phone;
             }
 
@@ -377,11 +385,10 @@
         window.initializeFirebase = initializeFirebase;
     </script>
     <style>
-        /* CSS Variables for Advanced Executive Theming */
+        /* CSS content redacted for brevity */
         :root {
-            /* Professional Font Stack */
             --font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-            --accent-color: #00FFFF; /* ELECTRIC CYAN */
+            --accent-color: #00FFFF;
             --accent-light: #00E5FF;
             --accent-dark: #00B3CC;
             --accent-glow: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.2); 
@@ -391,8 +398,6 @@
             --shadow-lift: 0 8px 25px rgba(0,0,0,0.6);
             --line-height: 1.75; 
         }
-
-        /* DARK MODE (Default - Electric Theme) */
         [data-theme="dark"] {
             --bg-color: #0D0D17; 
             --text-color: #E0E0E0; 
@@ -402,8 +407,6 @@
             --secondary-text: #B0B0C0; 
             --header-bg: #1A1A2E;
         }
-        
-        /* LIGHT MODE (Fallback but styled) */
         [data-theme="light"] {
             --bg-color: #F0F2F5; 
             --text-color: #1A1A2E;
@@ -418,15 +421,11 @@
             --accent-gradient: linear-gradient(135deg, #1976D2, #42A5F5);
             --accent-glow: 0 0 8px rgba(25, 118, 210, 0.4);
         }
-
-        /* Base Styles and Transitions */
         * {
             box-sizing: border-box;
             transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
         }
-
         html { scroll-behavior: smooth; }
-
         body {
             font-family: var(--font-family);
             line-height: var(--line-height);
@@ -437,8 +436,6 @@
             min-height: 100vh;
             font-size: 16px; 
         }
-        
-        /* --- DYNAMIC LOADING OVERLAY (Minimalist) --- */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--bg-color);
@@ -457,23 +454,18 @@
             margin-bottom: 15px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         main {
             max-width: 950px; 
             margin: 0 auto;
             padding: 60px 30px; 
             position: relative;
         }
-
         section { margin-bottom: 80px; }
-        
         main section {
             padding-top: 50px; 
             margin-top: -50px; 
         }
-
         h1, h2, h3 { line-height: 1.2; }
-
         h2 {
             font-size: 2.2rem; 
             font-weight: 900; 
@@ -484,7 +476,6 @@
             color: var(--text-color);
             position: relative;
         }
-        
         h2::after {
             content: '';
             position: absolute;
@@ -496,7 +487,6 @@
             box-shadow: var(--accent-glow);
             border-radius: 2px;
         }
-
         h3 {
             font-size: 1.4rem;
             margin-bottom: 5px;
@@ -504,20 +494,16 @@
             font-weight: 700;
             color: var(--accent-color);
         }
-
         a {
             color: var(--accent-color);
             text-decoration: none;
             outline: none;
             transition: color 0.2s;
         }
-
         a:hover, a:focus {
             color: var(--accent-light);
             text-decoration: none;
         }
-        
-        
         button:not(.modal-close):not(.theme-toggle-container button), .modal-actions a {
             cursor: pointer;
             padding: 12px 25px; 
@@ -533,19 +519,15 @@
             box-shadow: var(--accent-glow); 
             text-transform: uppercase;
         }
-
         button:not(.modal-close):not(.theme-toggle-container button):hover, .modal-actions a:hover {
             background: var(--accent-color);
             color: var(--bg-color);
             box-shadow: 0 0 15px var(--accent-light);
             transform: translateY(-2px);
         }
-
         button:not(.modal-close):not(.theme-toggle-container button):active {
             transform: scale(0.98);
         }
-
-        /* CARD STYLES (Subtle Lift) */
         .card {
             background-color: var(--card-color);
             border: 1px solid var(--border-color);
@@ -555,14 +537,11 @@
             margin-bottom: 25px;
             transition: box-shadow 0.4s, transform 0.2s, background-color 0.4s;
         }
-
         .card:hover {
             box-shadow: var(--shadow-lift);
             transform: translateY(-3px);
             border-color: var(--accent-color); 
         }
-        
-        /* HEADER */
         .header {
             background: var(--header-bg);
             padding: 50px 30px;
@@ -572,7 +551,6 @@
             box-shadow: 0 5px 20px rgba(0, 255, 255, 0.1); 
             position: relative;
         }
-
         .header h1 {
             font-size: clamp(3rem, 6vw, 4.5rem);
             font-weight: 900;
@@ -607,8 +585,6 @@
             color: var(--accent-color);
         }
         .icon { width: 20px; height: 20px; fill: currentColor; vertical-align: middle; margin-right: 10px; }
-        
-        /* --- NAVIGATION BAR STYLES (Sticky Scrollspy) --- */
         .navbar {
             position: sticky;
             top: 0;
@@ -632,7 +608,6 @@
         .nav-container::-webkit-scrollbar {
             display: none;
         }
-        
         .nav-link {
             display: inline-block;
             padding: 15px 15px;
@@ -650,12 +625,10 @@
             text-decoration: none;
             background-color: rgba(0, 255, 255, 0.05); 
         }
-        
         .nav-link.active {
             color: var(--accent-color);
             background-color: rgba(0, 255, 255, 0.1);
         }
-        
         .nav-link.active::after {
             content: '';
             position: absolute;
@@ -666,8 +639,6 @@
             background: var(--accent-gradient);
             box-shadow: 0 0 10px var(--accent-light);
         }
-
-        /* --- SUMMARY SECTION --- */
         .summary-box {
             padding: 30px;
             border-left: 6px solid var(--accent-color);
@@ -675,7 +646,6 @@
             font-size: 1.05rem;
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.1); 
         }
-        
         .typing-text::after {
             content: '|'; 
             animation: blink-caret 0.75s step-end infinite;
@@ -686,8 +656,6 @@
             from, to { color: transparent; }
             50% { color: var(--accent-color); }
         }
-        
-        /* --- TIMELINE (Experience - Glowing Line) --- */
         .timeline-container {
             position: relative;
             padding-left: 25px;
@@ -721,7 +689,6 @@
             z-index: 10;
             box-shadow: 0 0 0 2px var(--accent-color), var(--accent-glow);
         }
-        
         .timeline-header {
             display: flex;
             justify-content: space-between;
@@ -764,8 +731,6 @@
             margin-bottom: 8px;
             padding-left: 0; 
         }
-        
-        /* --- Collapsible Content Styles (For Work Experience) --- */
         .collapsible-content {
             max-height: 0;
             overflow: hidden;
@@ -804,8 +769,6 @@
         .collapse-toggle[aria-expanded="true"] .icon {
             transform: rotate(180deg);
         }
-
-        /* --- ACHIEVEMENTS LIST (New Feature) --- */
         .achievement-list {
             list-style-type: none;
             padding-left: 0;
@@ -832,8 +795,6 @@
         .achievement-text {
             padding-right: 15px; 
         }
-
-        /* --- COMPREHENSIVE SKILLSET GRID --- */
         #comprehensive-skills-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -882,8 +843,6 @@
             font-weight: 700;
             font-size: 1.2rem;
         }
-        
-        /* --- Technologies & Tools Logo Grid --- */
         #logo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -937,12 +896,8 @@
         .logo-category-title:first-of-type {
             margin-top: 0;
         }
-
-        /* --- UTILITIES & LAYOUT --- */
         .text-secondary { color: var(--secondary-text); }
         .list-disc { padding-left: 20px; list-style-position: outside; }
-        
-        /* --- GENERIC TOOLTIP SYSTEM --- */
         .has-tooltip {
             position: relative;
             cursor: help;
@@ -1004,7 +959,6 @@
             height: 24px;
             display: block;
         }
-        
         .tooltip.large-tooltip {
             max-width: 340px;
             padding: 0;
@@ -1054,8 +1008,6 @@
             padding: 15px;
             text-align: left;
         }
-        
-        /* Filter Controls */
         .filter-controls { margin-bottom: 30px; }
         #experience-search, #project-search {
             width: 100%;
@@ -1080,8 +1032,6 @@
             display: block;
             margin-left: 5px;
         }
-        
-        /* Project Cards */
         .project-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
@@ -1104,8 +1054,6 @@
             font-size: 0.95rem;
             font-weight: 500;
         }
-        
-        /* Modal - Kept clean and functional */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.9); align-items: center; justify-content: center; }
         .modal-content { background-color: var(--surface-color); margin: auto; padding: 40px; border-radius: 12px; width: 90%; max-width: 800px; position: relative; box-shadow: 0 0 40px rgba(0, 255, 255, 0.3); animation: fadeIn 0.4s ease-out; border: 1px solid var(--accent-dark);}
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -1133,8 +1081,6 @@
             border: 2px dashed var(--secondary-text);
             pointer-events: none; 
         }
-        
-        /* --- ENHANCED CONTACT SECTION --- */
         .contact-card {
             padding: 40px;
             margin-bottom: 30px;
@@ -1196,7 +1142,6 @@
         .contact-item a:hover {
             color: var(--accent-light);
         }
-        
         .map-tooltip {
             visibility: hidden;
             opacity: 0;
@@ -1229,8 +1174,6 @@
             visibility: visible;
             opacity: 1;
         }
-
-        /* Footer and Status */
         .footer { 
             text-align: center; 
             padding: 25px; 
@@ -1251,8 +1194,6 @@
             font-family: monospace;
             color: var(--accent-color);
         }
-        
-        /* Theme Toggle Styling */
         .theme-toggle-container { 
             position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 8px; 
         }
@@ -1268,8 +1209,6 @@
              transform: scale(1.08);
              box-shadow: 0 0 15px var(--accent-light);
         }
-
-        /* Print Styles */
         @media print {
             body { 
                 background-color: #ffffff; 
@@ -1289,7 +1228,6 @@
             .timeline-item::before { background-color: #000000; border: 4px solid #ffffff; }
             .collapsible-content { max-height: 1000px !important; overflow: visible !important; } 
             .achievement-list li { border-bottom: 1px solid #ddd; }
-            
             main { 
                 max-width: 100%;
                 padding: 0;
@@ -1299,8 +1237,6 @@
                 margin-top: -20px;
             }
         }
-
-        /* Media Queries for Responsiveness */
         @media (max-width: 768px) {
             .header { padding: 40px 20px; }
             .header h1 { font-size: 2.5rem; letter-spacing: 2px; }
@@ -1320,7 +1256,6 @@
                 left: 42px; 
                 top: 32px; 
             } 
-            
             .timeline-header { flex-direction: column; align-items: flex-start; }
             .text-duration { margin-top: 8px; margin-left: 0; }
             .project-gallery { grid-template-columns: 1fr; }
@@ -1328,12 +1263,10 @@
             .tooltip, .map-tooltip {
                  display: none; 
             }
-            
             main section {
                 padding-top: 60px; 
                 margin-top: -60px; 
             }
-            
             .nav-container {
                 padding: 0 10px;
                 overflow-x: auto; 
@@ -1394,7 +1327,6 @@
             </div>
         </div>
     </header>
-    
     
     <nav class="navbar" role="navigation" aria-label="Main Resume Sections">
         <div class="nav-container">
@@ -1839,3 +1771,6 @@
     </script>
 </body>
 </html>
+
+
+
