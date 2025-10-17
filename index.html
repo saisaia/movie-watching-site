@@ -77,12 +77,12 @@
                 institution: "Sorsogon State University",
                 year: "2024",
                 certifications: [
-                    { title: "Master in Software Architecture, Engineering and Development", url: "https://ude.my/UC-125dba58-4fb4-4147-9793-0f537b3097ee" },
-                    { title: "CSS, JavaScript, PHP And Python Programming All in One Course", url: "https://ude.my/UC-7191a6f7-9037-4e5c-8e4e-3a533bb2c786" },
-                    { title: "Data Center IT Infrastructure: The Complete IT Fundamentals", url: "https://ude.my/UC-a97cd22b-8300-47fa-b1c8-0db7d5a8e157" },
-                    { title: "Low-Level Computing for Computer Science & Engineering 2025+", url: "https://ude.my/UC-7538e604-2fa4-4262-934d-fb228b43c865" },
-                    { title: "Salesforce Admin Training: From Basics to Advanced Skills", url: "https://ude.my/UC-e1410420-e06f-4e95-9722-489e101e5280" },
-                    { title: "Complete Microsoft Word Excel PowerPoint Course", url: "https://ude.my/UC-6fa9156f-714b-4417-b638-c19161120e157" }
+                    { title: "Master in Software Architecture, Engineering and Development", url: "https://ude.my/UC-125dba58-4fb4-4147-9793-0f537b3097ee", imageUrl: "https://i.ibb.co/8Yj02jW/Screenshot-2025-10-17-161110.png", hours: 45 },
+                    { title: "CSS, JavaScript, PHP And Python Programming All in One Course", url: "https://ude.my/UC-7191a6f7-9037-4e5c-8e4e-3a533bb2c786", imageUrl: "https://i.ibb.co/d2N8p2y/cert2.png", hours: 80 },
+                    { title: "Data Center IT Infrastructure: The Complete IT Fundamentals", url: "https://ude.my/UC-a97cd22b-8300-47fa-b1c8-0db7d5a8e157", imageUrl: "https://i.ibb.co/yQZ1PCg/cert3.png", hours: 15 },
+                    { title: "Low-Level Computing for Computer Science & Engineering 2025+", url: "https://ude.my/UC-7538e604-2fa4-4262-934d-fb228b43c865", imageUrl: "https://i.ibb.co/JqjXmYq/cert4.png", hours: 25 },
+                    { title: "Salesforce Admin Training: From Basics to Advanced Skills", url: "https://ude.my/UC-e1410420-e06f-4e95-9722-489e101e5280", imageUrl: "https://i.ibb.co/N2c6PzJ/cert5.png", hours: 20 },
+                    { title: "Complete Microsoft Word Excel PowerPoint Course", url: "https://ude.my/UC-6fa9156f-714b-4417-b638-c19161120e157", imageUrl: "https://i.ibb.co/3s4yhXq/cert6.png", hours: 30 }
                 ]
             }
         };
@@ -321,42 +321,54 @@
             const degreeEl = document.getElementById('education-degree');
             const institutionEl = document.getElementById('education-institution');
             const yearEl = document.getElementById('education-year');
-            const certsContainer = document.getElementById('certifications-list');
-            if (!degreeEl || !certsContainer) return;
+            const slider = document.getElementById('certifications-slider');
+            const dotsContainer = document.getElementById('carousel-dots');
+            const statsEl = document.getElementById('certification-stats');
+
+            if (!degreeEl || !slider || !dotsContainer || !statsEl) return;
 
             degreeEl.textContent = educationData.degree || 'B.S. Information Technology';
             institutionEl.textContent = educationData.institution || 'Sorsogon State University';
             yearEl.textContent = educationData.year || '2024';
             
-            certsContainer.innerHTML = ''; 
-            const list = document.createElement('ul');
-            list.className = 'list-disc text-color';
-            list.style.listStyleType = 'disc';
-            list.style.marginTop = '15px';
+            const certs = educationData.certifications || [];
+            const totalCerts = certs.length;
+            const totalHours = certs.reduce((sum, cert) => sum + (cert.hours || 0), 0);
 
-            (educationData.certifications || []).forEach(cert => {
-                const listItem = document.createElement('li');
-                const link = document.createElement('a');
-                link.href = cert.url; 
-                link.target = "_blank";
-                link.rel = "noopener noreferrer";
-                link.style.fontWeight = '600';
+            if (statsEl) {
+                statsEl.innerHTML = `
+                    <span>${totalCerts} Certificates</span>
+                    <span class="stat-divider">|</span>
+                    <span>Approx. ${totalHours} Total Learning Hours</span>
+                `;
+            }
 
-                const linkTextContainer = document.createElement('span');
-                linkTextContainer.className = 'has-tooltip';
-                linkTextContainer.textContent = cert.title;
+            slider.innerHTML = '';
+            dotsContainer.innerHTML = '';
 
-                const tooltip = document.createElement('span');
-                tooltip.className = 'tooltip';
-                tooltip.innerHTML = `<svg class="icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path></svg><strong>Verified Credential</strong><p>Click to view this certificate on Udemy's official website.</p>`;
+            certs.forEach((cert, index) => {
+                // Create Slide
+                const slide = document.createElement('div');
+                slide.className = 'carousel-slide';
+                slide.innerHTML = `
+                    <a href="${cert.url}" target="_blank" rel="noopener noreferrer" title="View Certificate: ${cert.title}">
+                        <img src="${cert.imageUrl}" alt="Certificate for ${cert.title}" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/800x550/1A1A2E/E0E0E0?text=Image+Not+Found';">
+                        <div class="carousel-slide-caption">
+                            <p>${cert.title}</p>
+                        </div>
+                    </a>
+                `;
+                slider.appendChild(slide);
 
-                linkTextContainer.appendChild(tooltip);
-                link.appendChild(linkTextContainer);
-                listItem.appendChild(link);
-                list.appendChild(listItem);
+                // Create Dot
+                const dot = document.createElement('span');
+                dot.className = 'dot';
+                dot.setAttribute('data-slide-to', index);
+                dotsContainer.appendChild(dot);
             });
-
-            certsContainer.appendChild(list);
+            
+            // Set up the carousel functionality after rendering the slides and dots
+            setupCarousel();
         }
         
         function renderAwards(awards) {
@@ -1182,6 +1194,140 @@
             visibility: visible;
             opacity: 1;
         }
+
+        /* --- Advanced Carousel Styles --- */
+        .certification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+        .certification-header h3 {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+            color: var(--accent-light);
+            font-size: 1.25rem;
+        }
+        #certification-stats {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--secondary-text);
+        }
+        .stat-divider {
+            margin: 0 10px;
+            color: var(--border-color);
+        }
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+            box-shadow: var(--shadow-subtle);
+        }
+        .carousel-slider {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        .carousel-slide {
+            min-width: 100%;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .carousel-slide img {
+            width: 100%;
+            display: block;
+            border-radius: var(--border-radius);
+            background-color: var(--surface-color);
+            aspect-ratio: 800 / 550;
+            object-fit: contain;
+        }
+        .carousel-slide a {
+            display: block;
+            position: relative;
+        }
+        .carousel-slide-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(13, 13, 23, 0.95), transparent);
+            color: var(--text-color);
+            padding: 40px 20px 20px 20px;
+            text-align: center;
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .carousel-slide-caption p {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            text-shadow: 0 1px 3px #000;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(26, 26, 46, 0.7);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-dark);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+            box-shadow: var(--shadow-subtle);
+            text-shadow: 0 0 5px #000;
+        }
+        .carousel-btn:hover {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .carousel-btn.prev {
+            left: 15px;
+        }
+        .carousel-btn.next {
+            right: 15px;
+        }
+        .carousel-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 11;
+        }
+        .dot {
+            cursor: pointer;
+            height: 12px;
+            width: 12px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.3s ease, transform 0.2s;
+            border: 1px solid var(--accent-dark);
+        }
+        .dot.active, .dot:hover {
+            background-color: var(--accent-color);
+            box-shadow: var(--accent-glow);
+            transform: scale(1.2);
+        }
+        
+        /* Footer and Status */
         .footer { 
             text-align: center; 
             padding: 25px; 
@@ -1477,10 +1623,22 @@
                     </p>
                 </div>
                 
-                <h3 style="margin-top: 30px; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; color: var(--accent-light); font-size: 1.25rem;">Certifications</h3>
-                <div id="certifications-list">
-                    <!-- This will be populated by renderEducation -->
+                <div class="certification-header">
+                    <h3>Certifications</h3>
+                    <div id="certification-stats"></div>
                 </div>
+                
+                <div class="carousel-container">
+                    <div class="carousel-slider" id="certifications-slider">
+                        <!-- Certificate slides will be injected here -->
+                    </div>
+                    <button class="carousel-btn prev" aria-label="Previous Certificate">&#10094;</button>
+                    <button class="carousel-btn next" aria-label="Next Certificate">&#10095;</button>
+                    <div class="carousel-dots" id="carousel-dots">
+                        <!-- Carousel dots will be injected here -->
+                    </div>
+                </div>
+
             </div>
         </section>
         
@@ -1776,8 +1934,82 @@
                 });
             });
         });
+
+        // --- New Carousel Logic ---
+        function setupCarousel() {
+            const container = document.querySelector('.carousel-container');
+            const slider = document.querySelector('#certifications-slider');
+            if (!container || !slider) return;
+            
+            const slides = slider.querySelectorAll('.carousel-slide');
+            const prevBtn = document.querySelector('.carousel-btn.prev');
+            const nextBtn = document.querySelector('.carousel-btn.next');
+            const dotsContainer = document.querySelector('#carousel-dots');
+            
+            if (!slides.length || !prevBtn || !nextBtn || !dotsContainer) return;
+            const dots = dotsContainer.querySelectorAll('.dot');
+            
+            let currentIndex = 0;
+            const totalSlides = slides.length;
+            let autoplayInterval = null;
+
+            if (totalSlides <= 1) {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+                dotsContainer.style.display = 'none';
+                return;
+            }
+
+            function updateCarousel() {
+                slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentIndex);
+                });
+            }
+
+            function startAutoplay() {
+                stopAutoplay(); // Prevent multiple intervals
+                autoplayInterval = setInterval(() => {
+                    currentIndex = (currentIndex + 1) % totalSlides;
+                    updateCarousel();
+                }, 4000); // Change slide every 4 seconds
+            }
+
+            function stopAutoplay() {
+                clearInterval(autoplayInterval);
+            }
+
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % totalSlides;
+                updateCarousel();
+            });
+
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+                updateCarousel();
+            });
+
+            dots.forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    currentIndex = parseInt(e.target.getAttribute('data-slide-to'));
+                    updateCarousel();
+                });
+            });
+            
+            container.addEventListener('mouseenter', stopAutoplay);
+            container.addEventListener('mouseleave', startAutoplay);
+
+            // Reset autoplay on manual navigation
+            [prevBtn, nextBtn, ...dots].forEach(el => {
+                el.addEventListener('click', () => {
+                    stopAutoplay();
+                });
+            });
+
+            updateCarousel(); // Initialize first slide
+            startAutoplay(); // Start the automatic sliding
+        }
     </script>
 </body>
 </html>
-" and would like to make the following edits: "yes"
 
