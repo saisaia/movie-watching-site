@@ -124,8 +124,6 @@
             }
         }
 
-        // --- The rest of your JavaScript functions (renderStaticData, setupViewCounters, etc.) go here ---
-        // (Content redacted for brevity, it's the same as your original file)
         // --- Renders all sections using the fallback data ---
         function renderStaticData() {
             renderSummary(INITIAL_RESUME_DATA.summaryText);
@@ -148,8 +146,18 @@
 
             // --- 1. Total Views (Firestore) ---
             const analyticsDocRef = doc(db, "artifacts", appId, "public", "data", "analytics", "portfolio");
-            setDoc(analyticsDocRef, { totalViews: increment(1) }, { merge: true });
+            
+            // Check if the user has visited before using localStorage
+            const hasVisited = localStorage.getItem('portfolioVisited');
 
+            if (!hasVisited) {
+                // If they haven't visited, increment the count in Firebase
+                setDoc(analyticsDocRef, { totalViews: increment(1) }, { merge: true });
+                // And set the flag in localStorage so they aren't counted again
+                localStorage.setItem('portfolioVisited', 'true');
+            }
+
+            // Always listen for and display the latest total view count
             onSnapshot(analyticsDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const views = docSnap.data().totalViews;
@@ -167,7 +175,7 @@
             const presenceRef = ref(rtdb, '/presence');
 
             onValue(presenceRef, (snapshot) => {
-                const count = snapshot.numChildren();
+                const count = snapshot.size;
                 document.getElementById('live-viewers').textContent = count;
             });
 
@@ -1771,6 +1779,5 @@
     </script>
 </body>
 </html>
-
-
+" and would like to make the following edits: "yes"
 
