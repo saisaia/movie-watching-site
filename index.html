@@ -10,203 +10,84 @@
     <title>Portfolio| Furing Julius Czar N.</title>
 
     <script type="module">
+        // --- Firebase SDK Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, set, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         // --- GLOBAL INITIALIZATION AND DATA SETUP ---
-        // PASTE YOUR FIREBASE CONFIGURATION HERE
-        const firebaseConfig = {
-          apiKey: "YOUR_API_KEY",
-          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-          databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-          projectId: "YOUR_PROJECT_ID",
-          storageBucket: "YOUR_PROJECT_ID.appspot.com",
-          messagingSenderId: "YOUR_SENDER_ID",
-          appId: "YOUR_APP_ID"
-        };
-        
-        const initialAuthToken = null; // Set to null for static hosting
-        const appId = 'default-app-id'; // You can leave this as is
+        // These variables are provided by the environment.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
+        // --- Global Firebase instances ---
         let app, db, rtdb, auth;
         let userId = 'initializing...';
-
+        
+        // --- Fallback Data ---
+        // This data is used if Firebase is not configured or fails to load.
         const INITIAL_RESUME_DATA = {
             contact: {
                 email: 'juliusfuring45@gmail.com',
                 phone: '+63 995 587 0186',
-                viber: 'viber://chat?number=+639955870186', 
-                linkedin: 'https://www.linkedin.com/in/julius-czar-furing-dev', 
-                github: 'https://github.com/jczarf', 
+                viber: 'viber://chat?number=+639955870186',
+                linkedin: 'https://www.linkedin.com/in/julius-czar-furing-dev',
+                github: 'https://github.com/jczarf',
             },
             summaryText: "Highly motivated IT Professional and Full-Stack Developer with one year of progressive experience specializing in database architecture, web systems development, and technical support. My expertise spans deploying high-traffic systems like the **BoxLoad mobile app (50K+ downloads)**, developing proprietary CSR database solutions, and independently engineering full-featured platforms like the **CzarVision Movie Website**. I have a proven track record in system testing, optimization, and maintaining operational efficiency across diverse IT environments, demonstrating advanced proficiency in **full-stack development** and **system reliability**.",
             experiences: [
-                {
-                    id: 'exp1',
-                    title: 'Full-Stack Web & App Developer (Freelance / Collaboration)',
-                    company: 'Independent Projects & Collaboration',
-                    duration: 'Jul 2025 – Present',
-                    description: [
-                        "Mobile App Scaling (BoxLoad Collaboration): Contributed technical expertise to the BoxLoad - Cignal Gsat Loading utility application, supporting its scaling to over 50,000+ downloads on the Google Play Store.",
-                        "Web Platform Engineering (CzarVision): Independently engineered and deployed the full-stack CzarVision Movie Website, integrating external APIs for real-time data and Firebase for hosting/data persistence.",
-                        "Managed full development life cycles for independent projects, focusing on responsive design, API integration, and high-performance frontend logic (HTML, CSS, JavaScript)."
-                    ],
-                    search: "Full-Stack Developer Web App Development Collaboration Freelance Firebase CzarVision BoxLoad Mobile Movie Website"
-                },
-                {
-                    id: 'exp2',
-                    title: 'Database Developer',
-                    company: 'Pitakamo IT Solution and Marketing Corps',
-                    duration: 'Feb 2024 – Jul 2025',
-                    description: [
-                        "Led the development of a proprietary web-based database system for Customer Service Representatives (CSR), standardizing data organization and enhancing accessibility.",
-                        "Optimized database queries and structures, resulting in measurable improvements to overall system performance and backend efficiency.",
-                        "Conducted rigorous system testing, debugging, and quality assurance to ensure continuous system reliability and minimal operational downtime."
-                    ],
-                    search: "Pitakamo IT Solution Database Developer SQL Firebase System Enhancement CSR Web-Based Database"
-                },
-                {
-                    id: 'exp3',
-                    title: 'IT Support Specialist',
-                    company: 'Pitakamo IT Solution and Marketing Corps',
-                    duration: 'Feb 2024 – Jul 2025',
-                    description: [
-                        "Managed Tier 1 and Tier 2 technical support for staff, efficiently resolving complex hardware, software, and network configuration issues.",
-                        "Executed system maintenance and monitoring procedures to guarantee the smooth, day-to-day IT operations of the organization.",
-                        "Created and maintained a comprehensive technical knowledge base and resolution documentation, which streamlined support processes and reduced ticket resolution time."
-                    ],
-                    search: "Pitakamo IT Support Troubleshooting Hardware Software Network Technical Support"
-                }
+                { id: 'exp1', title: 'Full-Stack Web & App Developer (Freelance / Collaboration)', company: 'Independent Projects & Collaboration', duration: 'Jul 2025 – Present', description: ["Mobile App Scaling (BoxLoad Collaboration): Contributed technical expertise to the BoxLoad - Cignal Gsat Loading utility application, supporting its scaling to over 50,000+ downloads on the Google Play Store.", "Web Platform Engineering (CzarVision): Independently engineered and deployed the full-stack CzarVision Movie Website, integrating external APIs for real-time data and Firebase for hosting/data persistence.", "Managed full development life cycles for independent projects, focusing on responsive design, API integration, and high-performance frontend logic (HTML, CSS, JavaScript)."], search: "Full-Stack Developer Web App Development Collaboration Freelance Firebase CzarVision BoxLoad Mobile Movie Website" },
+                { id: 'exp2', title: 'Database Developer', company: 'Pitakamo IT Solution and Marketing Corps', duration: 'Feb 2024 – Jul 2025', description: ["Led the development of a proprietary web-based database system for Customer Service Representatives (CSR), standardizing data organization and enhancing accessibility.", "Optimized database queries and structures, resulting in measurable improvements to overall system performance and backend efficiency.", "Conducted rigorous system testing, debugging, and quality assurance to ensure continuous system reliability and minimal operational downtime."], search: "Pitakamo IT Solution Database Developer SQL Firebase System Enhancement CSR Web-Based Database" },
+                { id: 'exp3', title: 'IT Support Specialist', company: 'Pitakamo IT Solution and Marketing Corps', duration: 'Feb 2024 – Jul 2025', description: ["Managed Tier 1 and Tier 2 technical support for staff, efficiently resolving complex hardware, software, and network configuration issues.", "Executed system maintenance and monitoring procedures to guarantee the smooth, day-to-day IT operations of the organization.", "Created and maintained a comprehensive technical knowledge base and resolution documentation, which streamlined support processes and reduced ticket resolution time."], search: "Pitakamo IT Support Troubleshooting Hardware Software Network Technical Support" }
             ],
             projects: [
-                {
-                    id: 'project1',
-                    title: "BoxLoad: High-Volume Mobile Utility App",
-                    tech: "Android Development, Scalability, App Store Optimization",
-                    description: "Key contributor to the development and scaling of the **BoxLoad - Cignal Gsat Loading** mobile application. This commercial utility successfully achieved over **50,000+ downloads** on the Google Play Store. My work focused on optimizing data retrieval, application testing, and feature implementation to support high user traffic and ensure smooth, reliable performance, demonstrating expertise in high-volume, production-ready mobile systems.",
-                    liveLink: "https://play.google.com/store/apps/details?id=com.busybrindle.boxload",
-                    repoLink: null,
-                    search: "BoxLoad Mobile App Android Collaboration 50K Downloads Utility Cignal Gsat Loading"
-                },
-                {
-                    id: 'project2',
-                    title: "CzarVision: Web-Based Movie Platform (czarvision.pages.dev)",
-                    tech: "HTML, CSS, JavaScript (Vanilla), Firebase (Hosting/Database), External REST APIs",
-                    description: "Developed and deployed a high-performance, responsive movie platform, CzarVision, serving as a full-stack proof-of-concept. Key features include integrating external APIs to fetch real-time movie data, implementing robust search and filtering capabilities, and designing a user-friendly interface. The project utilizes Firebase for backend database and hosting, demonstrating strong end-to-end full-stack development capability.",
-                    liveLink: "https://czarvision.pages.dev",
-                    repoLink: "https://github.com/jczarf/CzarVision", 
-                    search: "CzarVision Movie Website Web Development HTML CSS JavaScript Firebase API Full-Stack czarvision.pages.dev"
-                },
-                {
-                    id: 'project3',
-                    title: "Modesta Resort Management System (Capstone)",
-                    tech: "PHP, MySQL, System Design, Database Normalization, Team Lead",
-                    description: "Spearheaded the development of the Modesta Resort Management System as a Capstone Project. This involved comprehensive system analysis, designing the secure MySQL database schema, implementing backend logic using PHP, and leading the development team to deliver a complex, functional application for resort operations, booking, and inventory management.",
-                    liveLink: null,
-                    repoLink: null,
-                    search: "Capstone Project Team Leadership Modesta Resort Management System PHP MySQL System Analysis"
-                },
-                {
-                    id: 'project4',
-                    title: "CSR Web-Based Database Management System",
-                    tech: "SQL/MySQL, Backend Logic (PHP/Python), Custom Web Interface (HTML/CSS/JS)",
-                    description: "Designed, developed, and maintained a proprietary web-based database system used by Customer Service Representatives (CSR) at Pitakamo IT Solution. This system standardized data organization, drastically improved data accessibility for the team, and included optimized querying logic to enhance overall business process efficiency and reporting.",
-                    liveLink: null,
-                    repoLink: null,
-                    search: "CSR Database System Web-Based SQL Proprietary Database Management Pitakamo Corporate"
-                },
+                { id: 'project1', title: "BoxLoad: High-Volume Mobile Utility App", tech: "Android Development, Scalability, App Store Optimization", description: "Key contributor to the development and scaling of the **BoxLoad - Cignal Gsat Loading** mobile application. This commercial utility successfully achieved over **50,000+ downloads** on the Google Play Store. My work focused on optimizing data retrieval, application testing, and feature implementation to support high user traffic and ensure smooth, reliable performance, demonstrating expertise in high-volume, production-ready mobile systems.", liveLink: "https://play.google.com/store/apps/details?id=com.busybrindle.boxload", repoLink: null, search: "BoxLoad Mobile App Android Collaboration 50K Downloads Utility Cignal Gsat Loading" },
+                { id: 'project2', title: "CzarVision: Web-Based Movie Platform (czarvision.pages.dev)", tech: "HTML, CSS, JavaScript (Vanilla), Firebase (Hosting/Database), External REST APIs", description: "Developed and deployed a high-performance, responsive movie platform, CzarVision, serving as a full-stack proof-of-concept. Key features include integrating external APIs to fetch real-time movie data, implementing robust search and filtering capabilities, and designing a user-friendly interface. The project utilizes Firebase for backend database and hosting, demonstrating strong end-to-end full-stack development capability.", liveLink: "https://czarvision.pages.dev", repoLink: "https://github.com/jczarf/CzarVision", search: "CzarVision Movie Website Web Development HTML CSS JavaScript Firebase API Full-Stack czarvision.pages.dev" },
+                { id: 'project3', title: "Modesta Resort Management System (Capstone)", tech: "PHP, MySQL, System Design, Database Normalization, Team Lead", description: "Spearheaded the development of the Modesta Resort Management System as a Capstone Project. This involved comprehensive system analysis, designing the secure MySQL database schema, implementing backend logic using PHP, and leading the development team to deliver a complex, functional application for resort operations, booking, and inventory management.", liveLink: null, repoLink: null, search: "Capstone Project Team Leadership Modesta Resort Management System PHP MySQL System Analysis" },
+                { id: 'project4', title: "CSR Web-Based Database Management System", tech: "SQL/MySQL, Backend Logic (PHP/Python), Custom Web Interface (HTML/CSS/JS)", description: "Designed, developed, and maintained a proprietary web-based database system used by Customer Service Representatives (CSR) at Pitakamo IT Solution. This system standardized data organization, drastically improved data accessibility for the team, and included optimized querying logic to enhance overall business process efficiency and reporting.", liveLink: null, repoLink: null, search: "CSR Database System Web-Based SQL Proprietary Database Management Pitakamo Corporate" }
             ],
             comprehensiveSkills: [
-                {
-                    title: "Core Areas",
-                    icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1h-2v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`,
-                    items: [
-                        "Administrative and clerical support", "Data encoding and documentation", "IT support and troubleshooting",
-                        "Web and app development", "Database management", "Automation and system optimization"
-                    ]
-                },
-                {
-                    title: "Software & Tools",
-                    icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83zM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM5.92 19H5v-.92l9.06-9.06.92.92L5.92 19z"/></svg>`,
-                    items: [
-                        "Microsoft Office (Word, Excel)", "Google Workspace (Sheets, Docs)", "PDF & Document Management",
-                        "VSCode, PlatformIO", "Android Studio", "Selenium & Automate App", "Git/GitHub Version Control"
-                    ]
-                },
-                {
-                    title: "Programming & Development",
-                    icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>`,
-                    items: [
-                        "HTML, CSS, JavaScript, PHP", "MySQL & Relational Databases", "Firebase (NoSQL, Auth, Storage)",
-                        "RESTful API Integration", "IoT Hardware Integration (M5, IR)"
-                    ]
-                },
-                {
-                    title: "Operating Systems",
-                    icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>`,
-                    items: [
-                        "Linux Distributions (Kali, Ubuntu)", "Development & Testing Environments", "System & Network Operations"
-                    ]
-                },
-                {
-                    title: "Soft Skills",
-                    icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`,
-                    items: [
-                        "Organization & Communication", "Teamwork & Collaboration", "Problem-Solving & Adaptability", "Attention to Detail", "Time Management"
-                    ]
-                }
+                { title: "Core Areas", icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1h-2v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`, items: ["Administrative and clerical support", "Data encoding and documentation", "IT support and troubleshooting", "Web and app development", "Database management", "Automation and system optimization"] },
+                { title: "Software & Tools", icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83zM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM5.92 19H5v-.92l9.06-9.06.92.92L5.92 19z"/></svg>`, items: ["Microsoft Office (Word, Excel)", "Google Workspace (Sheets, Docs)", "PDF & Document Management", "VSCode, PlatformIO", "Android Studio", "Selenium & Automate App", "Git/GitHub Version Control"] },
+                { title: "Programming & Development", icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>`, items: ["HTML, CSS, JavaScript, PHP", "MySQL & Relational Databases", "Firebase (NoSQL, Auth, Storage)", "RESTful API Integration", "IoT Hardware Integration (M5, IR)"] },
+                { title: "Operating Systems", icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>`, items: ["Linux Distributions (Kali, Ubuntu)", "Development & Testing Environments", "System & Network Operations"] },
+                { title: "Soft Skills", icon: `<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`, items: ["Organization & Communication", "Teamwork & Collaboration", "Problem-Solving & Adaptability", "Attention to Detail", "Time Management"] }
             ],
             awards: [
-                {
-                    text: "Market Impact: Directly contributed to the BoxLoad mobile application that achieved a milestone of 50,000+ Downloads.",
-                    stat: "50K+ Downloads",
-                    statColor: "#00C853" // Android Green
-                },
-                {
-                    text: "Database System Deployment: Successfully designed, implemented, and launched a proprietary web-based database system utilized daily by the CSR team.",
-                    stat: "100% Adoption",
-                    statColor: "#ff8f00" // Amber
-                },
-                {
-                    text: "Full-Stack Initiative: Developed and deployed the CzarVision movie website (czarvision.pages.dev), demonstrating proficiency in both frontend UX/UI and backend Firebase integration.",
-                    stat: "Independent Deploy",
-                    statColor: "#1976D2" // Blue
-                },
-                {
-                    text: "Leadership: Served as a team lead and primary developer for the Modesta Resort Capstone Project, delivering a complex system solution on schedule.",
-                    stat: "Team Lead",
-                    statColor: "#9c27b0" // Purple
-                }
+                { text: "Market Impact: Directly contributed to the BoxLoad mobile application that achieved a milestone of 50,000+ Downloads.", stat: "50K+ Downloads", statColor: "#00C853" },
+                { text: "Database System Deployment: Successfully designed, implemented, and launched a proprietary web-based database system utilized daily by the CSR team.", stat: "100% Adoption", statColor: "#ff8f00" },
+                { text: "Full-Stack Initiative: Developed and deployed the CzarVision movie website (czarvision.pages.dev), demonstrating proficiency in both frontend UX/UI and backend Firebase integration.", stat: "Independent Deploy", statColor: "#1976D2" },
+                { text: "Leadership: Served as a team lead and primary developer for the Modesta Resort Capstone Project, delivering a complex system solution on schedule.", stat: "Team Lead", statColor: "#9c27b0" }
             ],
-            certifications: [
-                { title: "Master in Software Architecture, Engineering and Development", url: "https://ude.my/UC-125dba58-4fb4-4147-9793-0f537b3097ee" },
-                { title: "CSS, JavaScript, PHP And Python Programming All in One Course", url: "https://ude.my/UC-7191a6f7-9037-4e5c-8e4e-3a533bb2c786" },
-                { title: "Data Center IT Infrastructure: The Complete IT Fundamentals", url: "https://ude.my/UC-a97cd22b-8300-47fa-b1c8-0db7d5a8e157"  },
-                { title: "Low-Level Computing for Computer Science & Engineering 2025+", url: "https://ude.my/UC-7538e604-2fa4-4262-934d-fb228b43c865" },
-                { title: "Salesforce Admin Training: From Basics to Advanced Skills", url: "https://ude.my/UC-e1410420-e06f-4e95-9722-489e101e5280" },
-                { title: "Complete Microsoft Word Excel PowerPoint Course", url: "https://ude.my/UC-6fa9156f-714b-4417-b638-c19161120e157" }
-            ]
+            education: {
+                degree: "B.S. Information Technology",
+                institution: "Sorsogon State University",
+                year: "2024",
+                certifications: [
+                    { title: "Master in Software Architecture, Engineering and Development", url: "https://ude.my/UC-125dba58-4fb4-4147-9793-0f537b3097ee" },
+                    { title: "CSS, JavaScript, PHP And Python Programming All in One Course", url: "https://ude.my/UC-7191a6f7-9037-4e5c-8e4e-3a533bb2c786" },
+                    { title: "Data Center IT Infrastructure: The Complete IT Fundamentals", url: "https://ude.my/UC-a97cd22b-8300-47fa-b1c8-0db7d5a8e157" },
+                    { title: "Low-Level Computing for Computer Science & Engineering 2025+", url: "https://ude.my/UC-7538e604-2fa4-4262-934d-fb228b43c865" },
+                    { title: "Salesforce Admin Training: From Basics to Advanced Skills", url: "https://ude.my/UC-e1410420-e06f-4e95-9722-489e101e5280" },
+                    { title: "Complete Microsoft Word Excel PowerPoint Course", url: "https://ude.my/UC-6fa9156f-714b-4417-b638-c19161120e157" }
+                ]
+            }
         };
 
         // --- AUTHENTICATION AND DATABASE INITIALIZATION ---
         async function initializeFirebase() {
             const loadingIndicator = document.getElementById('loading-overlay');
             loadingIndicator.style.display = 'flex';
-            
+
+            // Render static contact details immediately for better perceived performance
             renderContactDetails(INITIAL_RESUME_DATA.contact);
 
-            if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
                 console.error("Firebase configuration not found. Running in Static Fallback Mode.");
                 document.getElementById('system-status').textContent = 'STATIC FALLBACK';
-                renderSummary(INITIAL_RESUME_DATA.summaryText);
-                renderExperiences(INITIAL_RESUME_DATA.experiences || []);
-                renderProjects(INITIAL_RESUME_DATA.projects || []);
-                renderCertifications(INITIAL_RESUME_DATA.certifications || []);
-                renderAwards(INITIAL_RESUME_DATA.awards || []);
-                renderComprehensiveSkills(INITIAL_RESUME_DATA.comprehensiveSkills || []);
-                loadingIndicator.style.display = 'none';
+                renderStaticData();
                 return;
             }
 
@@ -223,7 +104,7 @@
                 }
 
                 userId = auth.currentUser?.uid || 'anonymous-' + crypto.randomUUID();
-                document.getElementById('user-id-display').textContent = `Document ID: ${userId.substring(0, 8)}...`;
+                document.getElementById('user-id-display').textContent = `Session ID: ${userId.substring(0, 8)}...`;
                 
                 listenForResumeData();
                 setupViewCounters();
@@ -232,14 +113,19 @@
             } catch (error) {
                 console.error("Firebase Initialization or Auth Failed:", error);
                 document.getElementById('system-status').textContent = 'ERROR: Auth Failed';
-                renderSummary(INITIAL_RESUME_DATA.summaryText);
-                renderExperiences(INITIAL_RESUME_DATA.experiences || []);
-                renderProjects(INITIAL_RESUME_DATA.projects || []);
-                renderCertifications(INITIAL_RESUME_DATA.certifications || []);
-                renderAwards(INITIAL_RESUME_DATA.awards || []);
-                renderComprehensiveSkills(INITIAL_RESUME_DATA.comprehensiveSkills || []);
-                loadingIndicator.style.display = 'none';
+                renderStaticData();
             }
+        }
+
+        // --- Renders all sections using the fallback data ---
+        function renderStaticData() {
+            renderSummary(INITIAL_RESUME_DATA.summaryText);
+            renderExperiences(INITIAL_RESUME_DATA.experiences || []);
+            renderProjects(INITIAL_RESUME_DATA.projects || []);
+            renderEducation(INITIAL_RESUME_DATA.education || {});
+            renderAwards(INITIAL_RESUME_DATA.awards || []);
+            renderComprehensiveSkills(INITIAL_RESUME_DATA.comprehensiveSkills || []);
+            document.getElementById('loading-overlay').style.display = 'none';
         }
 
         // --- LIVE VIEW & TOTAL VIEW COUNTERS ---
@@ -252,7 +138,7 @@
             }
 
             // --- 1. Total Views (Firestore) ---
-            const analyticsDocRef = doc(db, "analytics", "portfolio");
+            const analyticsDocRef = doc(db, "artifacts", appId, "public", "data", "analytics", "portfolio");
             setDoc(analyticsDocRef, { totalViews: increment(1) }, { merge: true });
 
             onSnapshot(analyticsDocRef, (docSnap) => {
@@ -282,27 +168,20 @@
 
         // --- REAL-TIME DATA LISTENER ---
         function listenForResumeData() {
-            const dataPath = `/artifacts/${appId}/users/${userId}/resumeData/main`;
-            const docRef = doc(db, dataPath);
+            const docRef = doc(db, "artifacts", appId, "public", "data", "resumeData", "main");
             const loadingIndicator = document.getElementById('loading-overlay');
             
-            loadingIndicator.style.display = 'flex';
-            
-            onSnapshot(docRef, async (docSnapshot) => {
-                let data = docSnapshot.data();
-
-                if (!docSnapshot.exists() || !data || Object.keys(data).length === 0) {
-                    if (document.getElementById('system-status').textContent !== 'STATIC FALLBACK') {
-                         await setDoc(docRef, INITIAL_RESUME_DATA);
-                    }
-                    data = INITIAL_RESUME_DATA;
-                }
+            onSnapshot(docRef, (docSnapshot) => {
+                let data = docSnapshot.exists() ? docSnapshot.data() : INITIAL_RESUME_DATA;
                 
-                renderContactDetails(data.contact || INITIAL_RESUME_DATA.contact);
+                // Merge with fallback data to prevent errors if some fields are missing in Firestore
+                data = { ...INITIAL_RESUME_DATA, ...data };
+
+                renderContactDetails(data.contact);
                 renderSummary(data.summaryText);
                 renderExperiences(data.experiences || []);
                 renderProjects(data.projects || []);
-                renderCertifications(data.certifications || []);
+                renderEducation(data.education || {});
                 renderAwards(data.awards || []);
                 renderComprehensiveSkills(data.comprehensiveSkills || []);
                 loadingIndicator.style.display = 'none';
@@ -310,16 +189,11 @@
             }, (error) => {
                 console.error("Firestore Error:", error);
                 document.getElementById('system-status').textContent = 'ERROR: Data Stream';
-                renderSummary(INITIAL_RESUME_DATA.summaryText);
-                renderExperiences(INITIAL_RESUME_DATA.experiences || []);
-                renderProjects(INITIAL_RESUME_DATA.projects || []);
-                renderCertifications(INITIAL_RESUME_DATA.certifications || []);
-                renderAwards(INITIAL_RESUME_DATA.awards || []);
-                renderComprehensiveSkills(INITIAL_RESUME_DATA.comprehensiveSkills || []);
-                loadingIndicator.style.display = 'none';
+                renderStaticData(); // Fallback to static data on error
             });
         }
         
+        // --- RENDER FUNCTIONS (UI UPDATES) ---
         function renderContactDetails(contactData) {
             const setLink = (selector, href, innerHTML) => {
                 const element = document.querySelector(selector);
@@ -362,8 +236,7 @@
                 githubLink.textContent = contactData.github ? 'github.com/jczarf' : 'Not Available';
             }
         }
-
-        // --- RENDER FUNCTIONS (UI UPDATES) ---
+        
         let isSummaryTyped = false;
         function renderSummary(summaryText) {
             const element = document.getElementById('summary-text');
@@ -393,70 +266,12 @@
 
                 let companyHtml = `<p class="text-secondary company-name">${exp.company}</p>`;
                 if (exp.company.includes('Pitakamo')) {
-                    companyHtml = `
-                        <p class="text-secondary company-name">
-                            <span class="has-tooltip">
-                                ${exp.company}
-                                <span class="tooltip large-tooltip">
-                                    <span class="tooltip-header">
-                                        <svg class="tooltip-logo" viewBox="0 0 100 100">
-                                            <rect width="100" height="100" fill="#fff"/>
-                                            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-family="sans-serif" font-size="50" font-weight="bold" fill="#1A1A2E">PITS</text>
-                                        </svg>
-                                        <span class="tooltip-header-text">
-                                            <strong>Pitakamo IT Solution & Marketing Corps</strong>
-                                        </span>
-                                    </span>
-                                    <p class="tooltip-description">A dynamic IT solutions and marketing agency specializing in custom software development and strategic digital services.</p>
-                                </span>
-                            </span>
-                        </p>
-                    `;
+                    companyHtml = `<p class="text-secondary company-name"><span class="has-tooltip">${exp.company}<span class="tooltip large-tooltip"><span class="tooltip-header"><svg class="tooltip-logo" viewBox="0 0 100 100"><rect width="100" height="100" fill="#fff"/><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-family="sans-serif" font-size="50" font-weight="bold" fill="#1A1A2E">PITS</text></svg><span class="tooltip-header-text"><strong>Pitakamo IT Solution & Marketing Corps</strong></span></span><p class="tooltip-description">A dynamic IT solutions and marketing agency specializing in custom software development and strategic digital services.</p></span></span></p>`;
                 } else if (exp.company.includes('Independent Projects')) {
-                     companyHtml = `
-                        <p class="text-secondary company-name">
-                            Independent Projects & 
-                            <span class="has-tooltip">
-                                Collaboration
-                                <span class="tooltip large-tooltip">
-                                    <span class="tooltip-header">
-                                        <svg viewBox="0 0 64 64" class="tooltip-logo" style="border-radius: 25%;">
-                                            <path fill="#4CAF50" d="M32,2C15.4,2,2,15.4,2,32s13.4,30,30,30s30-13.4,30-30S48.6,2,32,2z M45.4,45.4 c-2.9,2.9-6.8,4.6-11,4.6s-8.1-1.7-11-4.6c-2.9-2.9-4.6-6.8-4.6-11s1.7-8.1,4.6-11c2.9-2.9,6.8-4.6,11-4.6s8.1,1.7,11,4.6 c2.9,2.9,4.6,6.8,4.6,11S48.3,42.5,45.4,45.4z"/>
-                                            <path fill="#FFF" d="M33.9,40.1l-1.9,1.9c-0.4,0.4-1,0.4-1.4,0l-7.7-7.7c-0.4-0.4-0.4-1,0-1.4l1.9-1.9c0.4-0.4,1-0.4,1.4,0 l7.7,7.7C34.3,39.1,34.3,39.7,33.9,40.1z"/>
-                                            <path fill="#FFF" d="M41.6,32.4l-7.7-7.7c-0.4-0.4-1-0.4-1.4,0l-1.9,1.9c-0.4,0.4-0.4,1,0,1.4l7.7,7.7c0.4,0.4,1,0.4,1.4,0 l1.9-1.9C42,33.4,42,32.8,41.6,32.4z"/>
-                                        </svg>
-                                        <span class="tooltip-header-text">
-                                            <strong>BoxLoad App Collaboration</strong>
-                                        </span>
-                                    </span>
-                                    <p class="tooltip-description" style="padding: 15px;">Contributed to the scaling and feature development for the high-traffic BoxLoad utility app (50K+ downloads).</p>
-                                </span>
-                            </span>
-                        </p>
-                    `;
+                     companyHtml = `<p class="text-secondary company-name">Independent Projects & <span class="has-tooltip">Collaboration<span class="tooltip large-tooltip"><span class="tooltip-header"><svg viewBox="0 0 64 64" class="tooltip-logo" style="border-radius: 25%;"><path fill="#4CAF50" d="M32,2C15.4,2,2,15.4,2,32s13.4,30,30,30s30-13.4,30-30S48.6,2,32,2z M45.4,45.4 c-2.9,2.9-6.8,4.6-11,4.6s-8.1-1.7-11-4.6c-2.9-2.9-4.6-6.8-4.6-11s1.7-8.1,4.6-11c2.9-2.9,6.8-4.6,11-4.6s8.1,1.7,11,4.6 c2.9,2.9,4.6,6.8,4.6,11S48.3,42.5,45.4,45.4z"/><path fill="#FFF" d="M33.9,40.1l-1.9,1.9c-0.4,0.4-1,0.4-1.4,0l-7.7-7.7c-0.4-0.4-0.4-1,0-1.4l1.9-1.9c0.4-0.4,1-0.4,1.4,0 l7.7,7.7C34.3,39.1,34.3,39.7,33.9,40.1z"/><path fill="#FFF" d="M41.6,32.4l-7.7-7.7c-0.4-0.4-1-0.4-1.4,0l-1.9,1.9c-0.4,0.4-0.4,1,0,1.4l7.7,7.7c0.4,0.4,1,0.4,1.4,0 l1.9-1.9C42,33.4,42,32.8,41.6,32.4z"/></svg><span class="tooltip-header-text"><strong>BoxLoad App Collaboration</strong></span></span><p class="tooltip-description" style="padding: 15px;">Contributed to the scaling and feature development for the high-traffic BoxLoad utility app (50K+ downloads).</p></span></span></p>`;
                 }
                 
-                item.innerHTML = `
-                    <div class="timeline-header">
-                        <h3 tabindex="0">${exp.title}</h3>
-                        <span class="text-duration">${exp.duration}</span>
-                    </div>
-                    ${companyHtml}
-                    
-                    <div id="desc-${exp.id}" class="collapsible-content">
-                        <ul class="list-disc experience-details">
-                            ${descriptionHtml}
-                        </ul>
-                    </div>
-                    
-                    <button class="collapse-toggle" 
-                        data-target="desc-${exp.id}" 
-                        aria-expanded="false" 
-                        onclick="window.toggleCollapse(this)">
-                        <span data-label-text>Show Details</span>
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
-                    </button>
-                `;
+                item.innerHTML = `<div class="timeline-header"><h3 tabindex="0">${exp.title}</h3><span class="text-duration">${exp.duration}</span></div>${companyHtml}<div id="desc-${exp.id}" class="collapsible-content"><ul class="list-disc experience-details">${descriptionHtml}</ul></div><button class="collapse-toggle" data-target="desc-${exp.id}" aria-expanded="false" onclick="window.toggleCollapse(this)"><span data-label-text>Show Details</span><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg></button>`;
                 container.appendChild(item);
             });
             setupSearch('experience-search', 'experience-timeline', 'timeline-item', 'experience-count');
@@ -480,33 +295,31 @@
                 
                 const shortDescription = p.description.length > 100 ? p.description.substring(0, 100).trim() + '...' : p.description;
 
-                item.innerHTML = `
-                    <div class="card-content">
-                        <h3>${p.title}</h3>
-                        <p>${shortDescription}</p>
-                        <p class="project-tech text-secondary">Tech Stack: ${p.tech}</p>
-                    </div>
-                    <button class="mt-3" onclick="openModal('${p.id}')">View Full Details</button>
-                `;
+                item.innerHTML = `<div class="card-content"><h3>${p.title}</h3><p>${shortDescription}</p><p class="project-tech text-secondary">Tech Stack: ${p.tech}</p></div><button class="mt-3" onclick="openModal('${p.id}')">View Full Details</button>`;
                 container.appendChild(item);
             });
             setupSearch('project-search', 'project-gallery', 'project-card', 'project-count');
         }
         
-        function renderCertifications(certifications) {
-            const container = document.getElementById('certifications-list');
-            if (!container) return; 
+        function renderEducation(educationData) {
+            const degreeEl = document.getElementById('education-degree');
+            const institutionEl = document.getElementById('education-institution');
+            const yearEl = document.getElementById('education-year');
+            const certsContainer = document.getElementById('certifications-list');
+            if (!degreeEl || !certsContainer) return;
 
-            container.innerHTML = ''; 
+            degreeEl.textContent = educationData.degree || 'B.S. Information Technology';
+            institutionEl.textContent = educationData.institution || 'Sorsogon State University';
+            yearEl.textContent = educationData.year || '2024';
             
+            certsContainer.innerHTML = ''; 
             const list = document.createElement('ul');
             list.className = 'list-disc text-color';
             list.style.listStyleType = 'disc';
             list.style.marginTop = '15px';
 
-            certifications.forEach(cert => {
+            (educationData.certifications || []).forEach(cert => {
                 const listItem = document.createElement('li');
-                
                 const link = document.createElement('a');
                 link.href = cert.url; 
                 link.target = "_blank";
@@ -519,11 +332,7 @@
 
                 const tooltip = document.createElement('span');
                 tooltip.className = 'tooltip';
-                tooltip.innerHTML = `
-                    <svg class="icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path></svg>
-                    <strong>Verified Credential</strong>
-                    <p>Click to view this certificate on Udemy's official website.</p>
-                `;
+                tooltip.innerHTML = `<svg class="icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path></svg><strong>Verified Credential</strong><p>Click to view this certificate on Udemy's official website.</p>`;
 
                 linkTextContainer.appendChild(tooltip);
                 link.appendChild(linkTextContainer);
@@ -531,7 +340,7 @@
                 list.appendChild(listItem);
             });
 
-            container.appendChild(list);
+            certsContainer.appendChild(list);
         }
         
         function renderAwards(awards) {
@@ -545,10 +354,7 @@
 
             awards.forEach(award => {
                 const listItem = document.createElement('li');
-                listItem.innerHTML = `
-                    <span class="achievement-text">${award.text}</span>
-                    <span class="impact-stat" style="color: ${award.statColor};">${award.stat}</span>
-                `;
+                listItem.innerHTML = `<span class="achievement-text">${award.text}</span><span class="impact-stat" style="color: ${award.statColor};">${award.stat}</span>`;
                 list.appendChild(listItem);
             });
             container.appendChild(list);
@@ -557,28 +363,17 @@
         function renderComprehensiveSkills(skills) {
             const container = document.getElementById('comprehensive-skills-grid');
             if (!container) return;
-
             container.innerHTML = '';
-
             skills.forEach(category => {
                 const card = document.createElement('div');
                 card.className = 'card skill-category-card';
-
                 const itemsHtml = category.items.map(item => `<li>${item}</li>`).join('');
-
-                card.innerHTML = `
-                    <div class="skill-category-header">
-                        ${category.icon || ''}
-                        <h3>${category.title}</h3>
-                    </div>
-                    <ul class="skill-category-list">
-                        ${itemsHtml}
-                    </ul>
-                `;
+                card.innerHTML = `<div class="skill-category-header">${category.icon || ''}<h3>${category.title}</h3></div><ul class="skill-category-list">${itemsHtml}</ul>`;
                 container.appendChild(card);
             });
         }
-
+        
+        // --- Make functions globally accessible for inline event handlers ---
         window.initializeFirebase = initializeFirebase;
     </script>
     <style>
@@ -872,7 +667,6 @@
             box-shadow: 0 0 10px var(--accent-light);
         }
 
-
         /* --- SUMMARY SECTION --- */
         .summary-box {
             padding: 30px;
@@ -891,63 +685,6 @@
         @keyframes blink-caret { 
             from, to { color: transparent; }
             50% { color: var(--accent-color); }
-        }
-
-        /* --- SKILLS VISUALIZATION (Sleek Bars) --- */
-        .skill-filter-container {
-            margin-bottom: 25px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .skill-filter-container button.active {
-            background: var(--accent-color);
-            color: var(--bg-color);
-            box-shadow: 0 0 15px var(--accent-light);
-        }
-
-        .skill-group {
-            display: none;
-        }
-        .skill-group.visible {
-            display: block;
-        }
-
-        .skill-group h3 {
-            color: var(--accent-light);
-            font-weight: 700;
-            font-size: 1.25rem;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-        .skill-bar {
-            background-color: var(--border-color);
-            height: 14px; 
-            border-radius: 7px;
-            overflow: hidden;
-            margin-top: 8px;
-            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3); 
-        }
-        .skill-level {
-            height: 100%;
-            background: linear-gradient(90deg, #1E88E5 0%, var(--accent-color) 50%, var(--accent-light) 100%);
-            width: 0%; 
-            transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
-            border-radius: 7px;
-            box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); 
-        }
-        .skill-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        .skill-label span:last-child {
-            color: var(--accent-color);
-            font-weight: 800;
         }
         
         /* --- TIMELINE (Experience - Glowing Line) --- */
@@ -1201,7 +938,6 @@
             margin-top: 0;
         }
 
-
         /* --- UTILITIES & LAYOUT --- */
         .text-secondary { color: var(--secondary-text); }
         .list-disc { padding-left: 20px; list-style-position: outside; }
@@ -1317,13 +1053,6 @@
         .tooltip-description {
             padding: 15px;
             text-align: left;
-        }
-        
-        .proficiency-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            padding-top: 5px;
         }
         
         /* Filter Controls */
@@ -1553,7 +1282,7 @@
                 box-shadow: none;
             }
             .header h1 { color: #000000; text-shadow: none; }
-            .theme-toggle-container, .footer, button, .filter-controls, .modal, .collapse-toggle, .navbar, .tooltip, .map-tooltip, .skill-filter-container, .impact-stat, #technologies { display: none !important; }
+            .theme-toggle-container, .footer, button, .filter-controls, .modal, .collapse-toggle, .navbar, .tooltip, .map-tooltip, .impact-stat, #technologies { display: none !important; }
             .card, .timeline-item { border: 1px solid #ddd; box-shadow: none; background-color: #ffffff; }
             h2::after, .timeline-item::before, .timeline-container::before { background: none; box-shadow: none; border-color: #000000; }
             .timeline-item { border-left: 2px solid #000000; }
@@ -1570,7 +1299,6 @@
                 margin-top: -20px;
             }
         }
-
 
         /* Media Queries for Responsiveness */
         @media (max-width: 768px) {
@@ -1625,7 +1353,6 @@
                 padding: 25px;
             }
         }
-
     </style>
 </head>
 <body data-theme="dark" onload="initializeFirebase()">
@@ -1641,7 +1368,6 @@
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.75 8.25a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5h2.25c.414 0 .75.336.75.75zM12 18.75a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25a.75.75 0 01.75-.75zM4.773 5.343a.75.75 0 011.061 0l1.59 1.59a.75.75 0 01-1.06 1.06l-1.59-1.59a.75.75 0 010-1.06zM3 12.75a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75zM18.788 17.657a.75.75 0 01-1.06 1.06l-1.59-1.59a.75.75 0 011.06-1.06l1.59 1.59zM8.25 17.25a.75.75 0 01-.75.75H5.25a.75.75 0 010-1.5h2.25c.414 0 .75.336.75.75z"/></svg>
         </button>
     </div>
-
 
     <header class="header" role="banner">
         <div class="header-content">
@@ -1674,7 +1400,6 @@
         <div class="nav-container">
             <a href="#summary" class="nav-link">Profile</a>
             <a href="#skills" class="nav-link">Skills</a>
-            <a href="#skillset" class="nav-link">Skillset</a>
             <a href="#technologies" class="nav-link">Technologies</a>
             <a href="#experience" class="nav-link">Experience</a>
             <a href="#projects" class="nav-link">Projects</a>
@@ -1692,108 +1417,10 @@
         </section>
 
         <section id="skills" aria-labelledby="skills-heading">
-            <h2 id="skills-heading">Core Competencies</h2>
-            
-            <div class="skill-filter-container">
-                <button onclick="filterSkills('all')" data-filter="all" class="active">All Skills</button>
-                <button onclick="filterSkills('dev')" data-filter="dev">Development</button>
-                <button onclick="filterSkills('it')" data-filter="it">IT Operations</button>
-                <button onclick="filterSkills('prod')" data-filter="prod">Productivity</button>
-            </div>
-
-            <div class="skill-group card visible" data-skill-type="dev">
-                <h3>Web System Development</h3>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Database Architecture (SQL, Firebase)</span><span aria-hidden="true">85%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="85" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>JavaScript & Frontend Logic</span><span aria-hidden="true">78%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="78" role="progressbar" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Web/Mobile App Scalability</span><span aria-hidden="true">80%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="80" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Responsive Design (HTML/CSS)</span><span aria-hidden="true">85%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="85" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-            </div>
-
-            <div class="skill-group card visible" data-skill-type="it">
-                <h3>IT Operations & Support</h3>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Hardware/Software/Network Diagnostics</span><span aria-hidden="true">90%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="90" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>System Testing & Quality Assurance</span><span aria-hidden="true">80%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="80" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Incident Management & Escalation</span><span aria-hidden="true">88%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="88" role="progressbar" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>IT Asset & System Maintenance</span><span aria-hidden="true">95%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="95" role="progressbar" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-            </div>
-            
-            <div class="skill-group card visible" data-skill-type="prod">
-                <h3>Business Productivity & Office Tools</h3>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Microsoft Office Suite (Advanced)</span><span aria-hidden="true">95%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="95" role="progressbar" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Google Workspace (Drive, Sheets, Docs)</span><span aria-hidden="true">90%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="90" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-                <div class="skill-item">
-                    <div class="skill-label"><span>Salesforce Administration</span><span aria-hidden="true">75%</span></div>
-                    <div class="skill-bar"><div class="skill-level" data-target-width="75" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div></div>
-                </div>
-            </div>
-        </section>
-        
-        <section id="tech-stack" aria-labelledby="tech-heading">
-            <h2 id="tech-heading">Technical Stack</h2>
-            <div class="card">
-                <div class="proficiency-grid" aria-label="Technical Proficiencies">
-                    <span class="proficiency-tag has-tooltip">HTML5 / CSS3 / Bootstrap
-                         <span class="tooltip"><p>Core expertise in structuring and styling responsive, high-performance web applications.</p></span>
-                    </span>
-                    <span class="proficiency-tag has-tooltip">JavaScript (ES6+)
-                        <span class="tooltip"><p>Advanced proficiency in modern JavaScript for dynamic logic, front-end interactivity, and API consumption.</p></span>
-                    </span>
-                    <span class="proficiency-tag has-tooltip">Python / PHP
-                        <span class="tooltip"><p>Experience in back-end scripting for server-side logic, data processing, and application functionality.</p></span>
-                    </span>
-                    <span class="proficiency-tag has-tooltip">SQL (MySQL)
-                        <span class="tooltip"><p>Expertise in complex query optimization, database architecture, normalization, and management.</p></span>
-                    </span>
-                    <span class="proficiency-tag has-tooltip">Firebase (Firestore / Hosting)
-                        <span class="tooltip"><p>Skilled in NoSQL database management, real-time data synchronization, and serverless hosting deployment.</p></span>
-                    </span>
-                    <span class="proficiency-tag has-tooltip">RESTful API Integration
-                        <span class="tooltip"><p>Proven ability to integrate and manage external APIs for real-time data fetching and system interoperability.</p></span>
-                    </span>
-                    <span class="proficiency-tag has-tooltip">Android Mobile App Dev
-                        <span class="tooltip"><p>Experience contributing to high-volume mobile application development and scaling (50K+ downloads).</p></span>
-                    </span>
-                    <span class="proficiency-tag has-tooltip">System Design
-                        <span class="tooltip"><p>Competency in planning, conceptualizing, and developing end-to-end system architectures from requirements to deployment.</p></span>
-                    </span>
-                </div>
-            </div>
-        </section>
-
-        <section id="skillset" aria-labelledby="skillset-heading">
-            <h2 id="skillset-heading">Comprehensive Skillset</h2>
+            <h2 id="skills-heading">Comprehensive Skillset</h2>
             <div id="comprehensive-skills-grid">
-                </div>
+                <!-- This will be populated by renderComprehensiveSkills -->
+            </div>
         </section>
 
         <section id="technologies" aria-labelledby="technologies-heading">
@@ -1854,17 +1481,46 @@
             </div>
         </section>
         
+        <section id="experience" aria-labelledby="experience-heading">
+            <h2 id="experience-heading">Work Experience</h2>
+            <div class="filter-controls">
+                <input type="text" id="experience-search" placeholder="Search roles or achievements..." aria-label="Search experience entries">
+                <span id="experience-count" class="experience-search-status">Awaiting data...</span>
+            </div>
+            <div class="timeline-container" id="experience-timeline">
+                <!-- This will be populated by renderExperiences -->
+            </div>
+        </section>
+        
+        <section id="projects" aria-labelledby="projects-heading">
+            <h2 id="projects-heading">Selected Projects & Portfolio</h2>
+            <div class="filter-controls">
+                <input type="text" id="project-search" placeholder="Search project titles or technology stack..." aria-label="Search projects">
+                <span id="project-count" class="experience-search-status">Awaiting data...</span>
+            </div>
+            <div class="project-gallery" id="project-gallery">
+                <!-- This will be populated by renderProjects -->
+            </div>
+        </section>
+
+        <section id="awards" aria-labelledby="awards-heading">
+            <h2 id="awards-heading">Key Achievements & Impact</h2>
+            <div class="card" id="awards-list">
+                <!-- This will be populated by renderAwards -->
+            </div>
+        </section>
+        
         <section id="education" aria-labelledby="education-heading">
             <h2 id="education-heading">Education & Training</h2>
             <div class="card">
                 <div>
                     <div class="timeline-header">
-                        <h3 style="font-size: 1.1rem; color: var(--text-color); font-weight: 600;">B.S. Information Technology</h3>
-                        <span class="text-duration">2024</span>
+                        <h3 id="education-degree" style="font-size: 1.1rem; color: var(--text-color); font-weight: 600;"></h3>
+                        <span id="education-year" class="text-duration"></span>
                     </div>
                     <p class="text-secondary company-name" style="margin-top: 5px; margin-bottom: 0;">
-                        <span class="has-tooltip">
-                            Sorsogon State University
+                        <span class="has-tooltip" id="education-institution-wrapper">
+                            <span id="education-institution"></span>
                             <span class="tooltip large-tooltip">
                                 <span class="tooltip-header">
                                     <svg viewBox="0 0 100 100" alt="Sorsogon State University Logo" class="tooltip-logo"><rect width="100" height="100" fill="#c00"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" font-weight="bold" fill="#fff">SSU</text></svg>
@@ -1883,34 +1539,9 @@
                 
                 <h3 style="margin-top: 30px; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; color: var(--accent-light); font-size: 1.25rem;">Certifications</h3>
                 <div id="certifications-list">
-                    </div>
-            </div>
-        </section>
-
-        <section id="experience" aria-labelledby="experience-heading">
-            <h2 id="experience-heading">Work Experience</h2>
-            <div class="filter-controls">
-                <input type="text" id="experience-search" placeholder="Search roles or achievements..." aria-label="Search experience entries">
-                <span id="experience-count" class="experience-search-status">Awaiting data...</span>
-            </div>
-            <div class="timeline-container" id="experience-timeline">
+                    <!-- This will be populated by renderEducation -->
                 </div>
-        </section>
-        
-        <section id="projects" aria-labelledby="projects-heading">
-            <h2 id="projects-heading">Selected Projects & Portfolio</h2>
-            <div class="filter-controls">
-                <input type="text" id="project-search" placeholder="Search project titles or technology stack..." aria-label="Search projects">
-                <span id="project-count" class="experience-search-status">Awaiting data...</span>
             </div>
-            <div class="project-gallery" id="project-gallery">
-                </div>
-        </section>
-
-        <section id="awards" aria-labelledby="awards-heading">
-            <h2 id="awards-heading">Key Achievements & Impact</h2>
-            <div class="card" id="awards-list">
-                </div>
         </section>
         
         <section id="actions" aria-labelledby="actions-heading">
@@ -1988,14 +1619,13 @@
                 </a>
             </div>
         </section>
-
     </main>
 
     <footer class="footer" role="contentinfo">
         <p>© <span id="current-year"></span> FURING JULIUS CZAR N. | PROFESSIONAL DOCUMENT</p>
         <div class="system-status-info">
             <span>Data Status: <span id="system-status">LOADING...</span></span>
-            <span id="user-id-display">Doc ID: N/A</span>
+            <span id="user-id-display">Session ID: N/A</span>
             <span>Total Views: <span id="total-views">...</span></span>
             <span>Live Viewers: <span id="live-viewers">...</span></span>
         </div>
@@ -2003,7 +1633,7 @@
 
     <div id="project-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content">
-            <button class="modal-close" aria-label="Close Project Details" onclick="closeModal()">×</button>
+            <button class="modal-close" aria-label="Close Project Details" onclick="window.closeModal()">×</button>
             <h3 id="modal-title" style="font-size: 1.8rem;" data-id="title"></h3>
             <p class="text-secondary mb-3" style="font-style: italic;" data-id="tech"></p>
             
@@ -2017,8 +1647,8 @@
         </div>
     </div>
 
-
     <script>
+        // This script block contains non-module, globally accessible UI functions.
         
         window.projectsData = {};
 
@@ -2064,26 +1694,10 @@
             type();
         }
 
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        const loadTheme = () => {
-            const storedTheme = localStorage.getItem('theme') || 'dark';
-            body.setAttribute('data-theme', storedTheme);
-        };
-        
-        themeToggle.addEventListener('click', () => {
-            let currentTheme = body.getAttribute('data-theme');
-            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
-
         const modal = document.getElementById('project-modal');
         const modalContent = modal.querySelector('.modal-content');
 
-        function openModal(projectId) {
+        window.openModal = function(projectId) {
             const data = window.projectsData[projectId];
             if (!data) return;
 
@@ -2108,25 +1722,10 @@
             modalContent.focus();
         }
 
-        function closeModal() {
+        window.closeModal = function() {
             modal.style.display = 'none';
             document.body.style.overflow = '';
         }
-
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                closeModal();
-            }
-        });
-        
-        window.openModal = openModal;
-        window.closeModal = closeModal;
 
         function setupSearch(inputId, containerId, itemClass, countId) {
             const searchInput = document.getElementById(inputId);
@@ -2170,105 +1769,64 @@
         }
         window.setupSearch = setupSearch; 
 
-        function setupSkillBarAnimation() {
-            const skillBars = document.querySelectorAll('.skill-level');
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const level = entry.target.getAttribute('data-target-width') + '%';
-                        setTimeout(() => {
-                            entry.target.style.width = level;
-                        }, 200); 
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.7 });
-
-            skillBars.forEach(bar => {
-                bar.style.width = '0%'; 
-                observer.observe(bar);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme setup
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.body;
+            const loadTheme = () => {
+                const storedTheme = localStorage.getItem('theme') || 'dark';
+                body.setAttribute('data-theme', storedTheme);
+            };
+            themeToggle.addEventListener('click', () => {
+                let newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
             });
-        }
-        
-        window.filterSkills = function(filter) {
-            const groups = document.querySelectorAll('.skill-group');
-            const buttons = document.querySelectorAll('.skill-filter-container button');
+            loadTheme();
             
-            buttons.forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`button[data-filter="${filter}"]`).classList.add('active');
-
-            groups.forEach(group => {
-                const type = group.getAttribute('data-skill-type');
-                if (filter === 'all' || type === filter) {
-                    group.classList.add('visible');
-                    group.querySelectorAll('.skill-level').forEach(bar => {
-                        const level = bar.getAttribute('data-target-width') + '%';
-                        bar.style.transition = 'none';
-                        bar.style.width = '0%';
-                        setTimeout(() => {
-                            bar.style.transition = 'width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                            bar.style.width = level;
-                        }, 50);
-                    });
-                } else {
-                    group.classList.remove('visible');
-                }
+            // Set current year in footer
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            
+            // Modal event listeners
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) window.closeModal();
             });
-        }
-        
-        function setupScrollspy() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') window.closeModal();
+            });
+
+            // Scrollspy setup
             const sections = document.querySelectorAll('main > section[id]');
             const navLinks = document.querySelectorAll('.nav-link');
-            
-            const removeActive = () => {
-                navLinks.forEach(link => link.classList.remove('active'));
-            };
-
             const observerOptions = {
                 root: null, 
                 rootMargin: '0px 0px -70% 0px', 
                 threshold: 0 
             };
-
             const observer = new IntersectionObserver((entries) => {
                 let currentActive = null;
-                
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         currentActive = entry.target.getAttribute('id');
                     }
                 });
-
-                // Fallback for bottom of page
                 const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50;
                 if (isAtBottom) {
                     currentActive = 'actions';
                 }
-
                 if (currentActive) {
-                    removeActive();
+                    navLinks.forEach(link => link.classList.remove('active'));
                     const activeLink = document.querySelector(`.nav-link[href="#${currentActive}"]`);
-                    if (activeLink) {
-                        activeLink.classList.add('active');
-                    }
+                    if (activeLink) activeLink.classList.add('active');
                 }
-
             }, observerOptions);
-
-            
-            sections.forEach(section => {
-                observer.observe(section);
-            });
-            
-            
+            sections.forEach(section => observer.observe(section));
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
                     const targetElement = document.getElementById(targetId);
                     if (targetElement) {
-                        
                         window.scrollTo({
                             top: targetElement.offsetTop - 70, 
                             behavior: 'smooth'
@@ -2277,16 +1835,6 @@
                     }
                 });
             });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadTheme();
-            document.getElementById('current-year').textContent = new Date().getFullYear();
-            setupSkillBarAnimation();
-            setupScrollspy();
-            
-            // Initialize with 'all' filter active
-            window.filterSkills('all'); 
         });
     </script>
 </body>
